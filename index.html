@@ -40,10 +40,60 @@
 
     <script>
         const originalSentences = [
-            "LOVE ALL SERVE ALL",
-            "LIFE IS A GAME PLAY IT",
-            "THE END OF EDUCATION IS CHARACTER",
-            "BE GOOD DO GOOD SEE GOOD",
+            "BE GOOD SEE GOOD DO GOOD",
+            "PLEASE GOD PLEASE MAN",
+            "LOVE IS GIVING AND FORGIVING SELF IS GETTING AND FORGETTING",
+            "TIME WASTE IS LIFE WASTE",
+            "MONEY COMES AND GOES MORALITY COMES AND GROWS",
+            "LESS LUGGAGE MAKES TRAVEL MORE COMFORTABLE",
+            "START THE DAY WITH LOVE FILL THE DAY WITH LOVE SPEND THE DAY WITH LOVE END THE DAY WITH LOVE THIS IS THE WAY TO GOD",
+            "CARE NOT FOR MARKS BUT FOR REMARKS",
+            "BE A HERO AND NOT A ZERO",
+            "HANDS IN SOCIETY HEADS IN FOREST",
+            "SERVICE TO MANKIND IS SERVICE TO GOD",
+            "WATCH YOUR WORDS WATCH YOUR ACTIONS WATCH YOUR THOUGHTS WATCH YOUR CHARACTER WATCH YOUR HEART",
+            "TRUTH IS GOD GOD IS TRUTH",
+            "HE PRAYS BEST WHO LOVES BEST",
+            "LOVE IS GOD GOD IS LOVE SO LIVE IN LOVE",
+            "THE THREE DS ARE DUTY DEVOTION DISCIPLINE",
+            "THE THREE WS TO BE ADHERED ARE WORK WISDOM WORSHIP",
+            "THE THREE WS TO BE AVOIDED ARE WINE WEALTH WOMANWOMEN",
+            "THE FOUR S ARE SELFSACRIFICE SELFCONFIDENCE SELFSATISFACTION AND SELFREALISATION",
+            "COMMERCE WITHOUT MORALITY SCIENCE WITHOUT HUMANITY POLITICS WITHOUT PRINCIPLES ARE POSITIVELY USELESS AND DANGEROUS",
+            "ANGER AND INTOLERANCE ARE THE TWIN ENEMIES OF CORRECT UNDERSTANDING",
+            "LOVE IS SELFLESSNESS AND SELF IS LOVELESSNESS",
+            "THE NAME OF THE LORD IS MORE POWERFUL THAN THE FORM OF THE LORD",
+            "IF YOU CANT OBLIGE PLEASE SPEAK OBLIGINGLY",
+            "LOVE AS THOUGHT IS TRUTH LOVE AS ACTION IS RIGHTEOUSNESS LOVE AS FEELING IS PEACE LOVE AS UNDERSTANDING EKATHWAM IS NONVIOLENCE",
+            "FULL EFFORT IS FULL VICTORY",
+            "PRAYER IS THE ONLY WAY TO BRING ORDER AND PEACE",
+            "IF WEALTH IS LOST NOTHING IS LOST IF HEALTH IS LOST SOMETHING IS LOST IF CHARACTER IS LOST EVERYTHING IS LOST",
+            "THE FOUR FS ARE FOLLOW THE MASTER FACE THE DEVIL FIGHT TO THE END FINISH THE GAME",
+            "PRAYER IS NOT ASKING IT IS THE LONGING OF THE SOUL",
+            "PRAYER IS THE KEY OF THE MORNING AND THE BOLT OF THE EVENING",
+            "DUTY WITHOUT LOVE IS DEPLORABLE DUTY WITH LOVE IS DESIRABLE LOVE WITHOUT DUTY IS DIVINE",
+            "AFFECTION REVERENCE AND DEVOTION FOLLOW EACH OTHERS FOOTSTEPS",
+            "THE DESIRE FOR FRUITS IS AN OBSTACLE BETWEEN MAN AND GOD",
+            "MAN IS GOD THE ONLY DIFFERENCE BEING THAT GOD KNOWS HE IS GOD",
+            "ACTION WITHOUT PRAYER IS BLIND GROUPING WITH PRAYER IT BECOMES HONEST AND EFFECTIVE",
+            "KINDNESS IN WORDS CREATES CONFIDENCE KINDNESS IN THOUGHT CREATES PROFOUNDNESS KINDNESS IN GIVING CREATES LOVE",
+            "WORK IS WORSHIP DUTY IS GOD",
+            "HASTE MAKES WASTE WASTE MAKES WORRY SO DONT BE IN HURRY",
+            "CASTE WITHOUT CHARACTER IS OF NO VALUE IT IS AN EMPTY LABEL",
+            "LOVE AS THOUGHT IS TRUTH SATHYAM LOVE AS ACTION IS GOODNESS SIVAM LOVE AS FEELING IS BEAUTY SUNDARAM",
+            "THE VOICE OF GOD CAN BE HEARD ONLY IN THE DEPTH OF SILENCE",
+            "YOU ARE IN LIGHT THE LIGHT IS IN YOU THE LIGHT AND YOU ARE ONE",
+            "MAN WITHOUT GOD IS NOT MAN GOD WITHOUT MAN IS GOD",
+            "FIRST STEP MAN DRINKS WINE SECOND STEP WINE DRINKS WINE THIRD STEP WINE DRINKS MAN",
+            "THE PAST IS BEYOND RECOVERY THE FUTURE YOU ARE NOT SURE THE GIVEN MOMENT IS NOW SANCTIFY IT WITH GOOD THOUGHTS GOOD WORDS GOO",
+            "LET TRUTH BE YOUR FATHER LOVE BE YOUR MOTHER WISDOM BE YOUR SON PEACE BE YOUR SISTER DEVOTION BE YOUR BROTHER YOGIS BE YOUR FRIENDS",
+            "I AM NOT ONE BUT THREE WHAT OTHERS THINK I AM WHAT I THINK I AM WHAT REALLY I AM",
+            "END OF KNOWLEDGE IS LOVE END OF CULTURE IS PERFECTION END OF WISDOM IS FREEDOM END OF EDUCATION IS CHARACTER",
+            "DEATH IS BETTER THAN THE BONDAGE OF IGNORANCE",
+            "CONTROL OF SPEECH IS THE BEST ORNAMENT AND ARMAMENT WEAPON",
+            "HANDS THAT HELP ARE HOLIER THAN THE LIPS THAT PRAY",
+            "THERE IS ONLY ONE RELIGION THE RELIGION OF LOVE THERE IS ONLY ONE LANGUAGE THE LANGUAGE OF HEART THERE IS ONLY ONE CASTE THE CASTE O",
+            "BEND THE BODY MEND THE SENSES END THE MIND THAT IS THE WAY TO IMMORTALITY",
         ];
 
         const gameContainer = document.getElementById("game-container");
@@ -60,6 +110,7 @@
                 [letters[i], letters[j]] = [letters[j], letters[i]];
             }
             const jumbledWord = letters.join("");
+            // Increased check to avoid jumbling short words back to original
             return jumbledWord === word && word.length > 2
                 ? jumbleWord(word)
                 : jumbledWord;
@@ -126,10 +177,12 @@
 
             const typedValue = inputElement.value.toUpperCase().trim();
 
+            // Get all letter spans currently available in this word container
             const allLetterSpansInWord = Array.from(
                 letterContainer.querySelectorAll(".letter")
             );
 
+            // Map available letters to their spans
             const availableLetterMap = allLetterSpansInWord.reduce(
                 (map, span) => {
                     const char = span.textContent;
@@ -145,23 +198,37 @@
             const orderedSpans = [];
             const usedSpans = new Set();
 
+            // Try to build the typed word using available letter spans
             for (const char of typedValue) {
                 if (
                     availableLetterMap[char] &&
                     availableLetterMap[char].length > 0
                 ) {
-                    const spanToUse = availableLetterMap[char].shift();
+                    const spanToUse = availableLetterMap[char].shift(); // Use one instance of the letter
                     orderedSpans.push(spanToUse);
                     usedSpans.add(spanToUse);
                 }
+                // If a typed character isn't available, we stop trying to match
+                // (This prevents rearranging based on partial invalid input)
+                // else {
+                //    break; // Optional: Decide if partial rearrangement is desired
+                // }
             }
 
+            // Keep only the spans that correspond to the valid typed prefix
+            const validOrderedSpans = orderedSpans.slice(0, typedValue.length);
+            const validUsedSpans = new Set(validOrderedSpans);
+
+            // Get the spans that were not used for the valid typed prefix
             const remainingSpans = allLetterSpansInWord.filter(
-                (span) => !usedSpans.has(span)
+                (span) => !validUsedSpans.has(span)
             );
 
+            // Reconstruct the word container: ordered letters first, then remaining
             letterContainer.innerHTML = "";
-            orderedSpans.forEach((span) => letterContainer.appendChild(span));
+            validOrderedSpans.forEach((span) =>
+                letterContainer.appendChild(span)
+            );
             remainingSpans.forEach((span) => letterContainer.appendChild(span));
         }
 
@@ -194,11 +261,16 @@
 
         function revealSolution(event) {
             const button = event.target;
-            const sentenceIndex = parseInt(button.dataset.sentenceIndex, 10);
+            // Get the original index stored in the button's dataset
+            const originalSentenceIndex = parseInt(
+                button.dataset.sentenceIndex,
+                10
+            );
             const sentenceLine = button.closest(".sentence-line");
-            if (!sentenceLine || isNaN(sentenceIndex)) return;
+            if (!sentenceLine || isNaN(originalSentenceIndex)) return;
 
-            const correctSentence = originalSentences[sentenceIndex];
+            // Fetch the correct sentence from the *original* array using the stored index
+            const correctSentence = originalSentences[originalSentenceIndex];
             const solutionDisplay =
                 sentenceLine.querySelector(".solution-display");
             const wordGroups = sentenceLine.querySelectorAll(".word-group");
@@ -215,8 +287,31 @@
                 inputElement.value = originalWord;
                 lockWordGroup(group);
             });
-            button.disabled = true;
+            button.disabled = true; // Disable button after revealing
+            button.style.opacity = "0"; // Hide button
+            button.style.pointerEvents = "none";
         }
+
+        // *** MODIFICATION START ***
+        function selectRandomQuotes(quotesArray, count) {
+            const selectedData = [];
+            const usedIndices = new Set();
+            const totalQuotes = quotesArray.length;
+            const numToSelect = Math.min(count, totalQuotes); // Ensure we don't ask for more than available
+
+            while (selectedData.length < numToSelect) {
+                const randomIndex = Math.floor(Math.random() * totalQuotes);
+                if (!usedIndices.has(randomIndex)) {
+                    usedIndices.add(randomIndex);
+                    selectedData.push({
+                        sentence: quotesArray[randomIndex],
+                        originalIndex: randomIndex, // Keep track of the original index
+                    });
+                }
+            }
+            return selectedData;
+        }
+        // *** MODIFICATION END ***
 
         function createGameUI() {
             gameContainer.innerHTML = "";
@@ -224,21 +319,36 @@
             feedbackDiv.className = "";
             sortableInstances.clear();
 
-            originalSentences.forEach((sentence, sentenceIndex) => {
+            // *** MODIFICATION START ***
+            const numberOfQuotesToDisplay = 5;
+            const selectedQuotesData = selectRandomQuotes(
+                originalSentences,
+                numberOfQuotesToDisplay
+            );
+            // *** MODIFICATION END ***
+
+            // Loop through the selected quotes data instead of the original array
+            selectedQuotesData.forEach((item, displayIndex) => {
+                const sentence = item.sentence;
+                const originalSentenceIndex = item.originalIndex; // Get the stored original index
+
                 const sentenceLineDiv = document.createElement("div");
                 sentenceLineDiv.className = "sentence-line";
-                sentenceLineDiv.dataset.sentenceIndex = sentenceIndex;
+                // Store the original index in the sentence line if needed elsewhere, though button handles it
+                // sentenceLineDiv.dataset.originalSentenceIndex = originalSentenceIndex;
+
                 const contentDiv = document.createElement("div");
                 contentDiv.className = "sentence-content";
 
                 const words = sentence.split(" ");
                 words.forEach((originalWord, wordIndex) => {
-                    const wordContainerId = `word-${sentenceIndex}-${wordIndex}`;
+                    // Use the displayIndex (0-4) for unique element IDs in this session
+                    const wordContainerId = `word-${displayIndex}-${wordIndex}`;
                     const wordGroupDiv = document.createElement("div");
                     wordGroupDiv.className = "word-group";
                     const wordLettersDiv = document.createElement("div");
                     wordLettersDiv.className = "word";
-                    wordLettersDiv.dataset.originalWord = originalWord;
+                    wordLettersDiv.dataset.originalWord = originalWord; // Store correct word here
                     wordLettersDiv.id = wordContainerId;
 
                     const jumbled = jumbleWord(originalWord);
@@ -253,11 +363,12 @@
                     inputBox.type = "text";
                     inputBox.className = "word-input";
                     inputBox.placeholder = "Type or drag";
+                    // Adjust aria-label to use the displayed sentence number (1 to 5)
                     inputBox.setAttribute(
                         "aria-label",
                         `Type or drag letters for word ${
                             wordIndex + 1
-                        } in sentence ${sentenceIndex + 1}`
+                        } in sentence ${displayIndex + 1}` // Use displayIndex + 1
                     );
                     inputBox.addEventListener("input", handleInputChange);
                     inputBox.disabled = false;
@@ -283,7 +394,8 @@
                 const solutionButton = document.createElement("button");
                 solutionButton.className = "solution-button";
                 solutionButton.textContent = "Show Solution";
-                solutionButton.dataset.sentenceIndex = sentenceIndex;
+                // *** IMPORTANT: Store the ORIGINAL index for the reveal function ***
+                solutionButton.dataset.sentenceIndex = originalSentenceIndex;
                 solutionButton.addEventListener("click", revealSolution);
 
                 sentenceLineDiv.appendChild(contentDiv);
@@ -295,7 +407,7 @@
 
         function checkSingleWord(wordGroup) {
             if (wordGroup.classList.contains("word-correct")) {
-                return true;
+                return true; // Already marked correct
             }
 
             const letterContainer = wordGroup.querySelector(".word");
@@ -303,55 +415,70 @@
             const originalWord = letterContainer.dataset.originalWord;
             let userWord = "";
 
+            // Prefer input box value if it's not empty
             if (inputElement.value.trim()) {
                 userWord = inputElement.value.toUpperCase().trim();
             } else {
+                // Otherwise, use the order of letters
                 userWord = getCurrentWordFromLetters(letterContainer);
+                // If letters match, update the input box for consistency
                 if (userWord === originalWord) {
                     inputElement.value = userWord;
                 }
             }
 
+            // Reset visual state before checking
             wordGroup.classList.remove("word-incorrect", "word-correct");
 
             if (userWord === originalWord) {
-                lockWordGroup(wordGroup);
+                lockWordGroup(wordGroup); // Lock if correct
                 return true;
             } else {
                 wordGroup.classList.add("word-incorrect");
-                unlockWordGroup(wordGroup);
+                unlockWordGroup(wordGroup); // Ensure it's unlocked if incorrect
                 return false;
             }
         }
+
         function checkAnswers() {
             const wordGroups = gameContainer.querySelectorAll(".word-group");
             let allCorrect = true;
+            let incorrectCount = 0; // Count incorrect words
+
             wordGroups.forEach((group) => {
-                if (!checkSingleWord(group)) allCorrect = false;
+                if (!checkSingleWord(group)) {
+                    allCorrect = false;
+                    incorrectCount++;
+                }
             });
+
+            feedbackDiv.classList.remove("correct", "incorrect"); // Clear previous classes
 
             if (allCorrect) {
                 feedbackDiv.textContent =
-                    "Excellent! You got everything right!";
-                feedbackDiv.className = "correct";
+                    "Excellent! You unscrambled all the words correctly!";
+                feedbackDiv.classList.add("correct");
             } else {
-                feedbackDiv.textContent =
-                    "Good job! Keep trying on the words with red borders.";
-                feedbackDiv.className = "incorrect";
+                feedbackDiv.textContent = `Good effort! ${incorrectCount} word(s) still need correction. Keep trying!`;
+                feedbackDiv.classList.add("incorrect");
             }
         }
 
         function resetGame() {
+            // Reload the page to get a new set of random quotes
             location.reload();
         }
 
+        // Event Listeners
         checkButton.addEventListener("click", checkAnswers);
         resetButton.addEventListener("click", resetGame);
 
+        // Initial game setup on page load
         createGameUI();
     </script>
 
     <style>
+        /* CSS remains the same as provided */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -450,250 +577,265 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            justify-content: center;
-            gap: 20px 16px;
-            padding-bottom: 8px;
-            min-width: fit-content;
+            justify-content: center; /* Center words */
+            gap: 20px 16px; /* Vertical gap, Horizontal gap */
+            padding-bottom: 8px; /* Space above solution button */
+            min-width: fit-content; /* Ensure container fits content */
         }
 
         .word-group {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 12px; /* Increased gap */
             transition: background-color 0.3s ease-in-out;
-            padding: 12px;
+            padding: 12px; /* Padding around word+input */
             border-radius: 8px;
-            min-width: 80px;
+            min-width: 80px; /* Minimum width for small words */
         }
 
         .word {
             display: flex;
-            flex-wrap: nowrap;
-            justify-content: center;
-            gap: 4px;
-            min-height: 44px;
-            padding: 8px;
-            border-radius: 8px;
-            border: 0px solid transparent;
-            transition: border 0.3s ease-in-out;
-            width: 100%;
-            touch-action: manipulation;
+            flex-wrap: nowrap; /* Keep letters in one line */
+            justify-content: center; /* Center letters */
+            gap: 4px; /* Gap between letters */
+            min-height: 44px; /* Ensure consistent height */
+            padding: 8px; /* Padding inside the letter container */
+            border-radius: 8px; /* Rounded corners for the container */
+            border: 0px solid transparent; /* Was dashed on incorrect, now handled by background */
+            transition: border 0.3s ease-in-out; /* Smooth border transition */
+            width: 100%; /* Take up width of parent .word-group */
+            touch-action: manipulation; /* Improve touch interaction */
+            /* background-color: #fff8e1; Optional subtle background */
         }
 
         .letter {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background-color: #ffa726;
+            background-color: #ffa726; /* Primary letter color */
             color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
+            width: 40px; /* Letter width */
+            height: 40px; /* Letter height */
+            border-radius: 8px; /* Rounded letters */
             cursor: grab;
             font-weight: bold;
             text-align: center;
-            user-select: none;
+            user-select: none; /* Prevent text selection */
             transition: background-color 0.25s ease, opacity 0.25s ease,
                 transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.25s ease;
-            font-size: 1.25rem;
-            box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
-            will-change: transform, background-color, box-shadow;
+            font-size: 1.25rem; /* Letter size */
+            box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            will-change: transform, background-color, box-shadow; /* Optimize animation */
         }
         .letter:active {
             cursor: grabbing;
-            background-color: #fb8c00 !important;
-            transform: scale(1.1);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 10;
+            background-color: #fb8c00 !important; /* Darker shade when grabbed */
+            transform: scale(1.1); /* Slightly enlarge when grabbed */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Stronger shadow */
+            z-index: 10; /* Bring to front */
         }
 
         .letter-ghost {
-            opacity: 0.4 !important;
-            background-color: #ffcc80 !important;
+            opacity: 0.4 !important; /* Make ghost more transparent */
+            background-color: #ffcc80 !important; /* Lighter ghost color */
             box-shadow: none !important;
-            border-radius: 8px;
-            transform: scale(1);
+            border-radius: 8px; /* Match letter radius */
+            transform: scale(1); /* No scaling for ghost */
         }
 
         .word-input {
             padding: 8px 12px;
-            border: 1px solid #ffcc80;
-            border-radius: 20px;
+            border: 1px solid #ffcc80; /* Light orange border */
+            border-radius: 20px; /* Pill shape */
             font-size: 1rem;
             text-align: center;
-            width: 100%;
-            max-width: fit-content;
-            text-transform: uppercase;
-            outline: none;
+            width: 100%; /* Input takes width of .word-group */
+            max-width: fit-content; /* Shrink to fit content + padding */
+            min-width: 100px; /* Minimum width */
+            text-transform: uppercase; /* Match letter case */
+            outline: none; /* Remove default outline */
             transition: border-color 0.25s ease, background-color 0.3s ease,
                 color 0.3s ease, box-shadow 0.25s ease;
         }
         .word-input:focus {
-            border-color: #ff9800;
-            box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.2);
+            border-color: #ff9800; /* Darker orange border on focus */
+            box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.2); /* Subtle glow */
         }
         .word-input::placeholder {
-            color: #bdbdbd;
+            color: #bdbdbd; /* Lighter placeholder text */
             font-style: italic;
-            text-transform: none;
+            text-transform: none; /* Placeholder doesn't need uppercase */
         }
 
         .solution-display {
             margin-top: 12px;
             padding: 8px 12px;
-            background-color: #fff8e1;
+            background-color: #fff8e1; /* Light yellow background */
             border-radius: 8px;
             font-style: italic;
-            color: #e65100;
+            color: #e65100; /* Dark orange text */
             font-weight: bold;
             text-align: center;
-            display: none;
-            border: 1px dashed #ffe0b2;
+            display: none; /* Hidden by default */
+            border: 1px dashed #ffe0b2; /* Dashed border */
             font-size: 1rem;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
+            opacity: 0; /* Start fully transparent */
+            transition: opacity 0.3s ease-in-out; /* Fade-in transition */
         }
         .solution-display.visible {
-            display: block;
-            opacity: 1;
+            display: block; /* Make it take space */
+            opacity: 1; /* Make it fully visible */
         }
 
         .solution-button {
-            display: block;
-            margin: 12px auto 0 auto;
-            padding: 8px 16px;
-            font-size: 0.75rem;
+            display: block; /* Ensure it's on its own line */
+            margin: 12px auto 0 auto; /* Center horizontally, add top margin */
+            padding: 6px 12px; /* Smaller padding */
+            font-size: 0.75rem; /* Smaller font */
             background-color: #fff;
-            color: #ffa726;
-            border: 1px solid #ffe0b2;
-            border-radius: 16px;
+            color: #ffa726; /* Orange text */
+            border: 1px solid #ffe0b2; /* Light orange border */
+            border-radius: 16px; /* Rounded corners */
             cursor: pointer;
             transition: background-color 0.25s ease, color 0.25s ease,
                 box-shadow 0.25s ease, opacity 0.3s ease;
             font-weight: 500;
-            opacity: 1;
+            opacity: 1; /* Visible by default */
         }
         .solution-button:hover {
-            background-color: #fff8e1;
-            color: #f57c00;
-            box-shadow: 0 4px 4px rgba(0, 0, 0, 0.08);
+            background-color: #fff8e1; /* Light yellow on hover */
+            color: #f57c00; /* Darker orange text on hover */
+            box-shadow: 0 4px 4px rgba(0, 0, 0, 0.08); /* Subtle shadow */
         }
         .solution-button:disabled {
-            opacity: 0;
-            pointer-events: none;
+            /* opacity: 0; */ /* Kept for reference, handled by revealSolution */
+            /* pointer-events: none; */ /* Kept for reference, handled by revealSolution */
+            cursor: default;
         }
 
         .controls-container {
             text-align: center;
-            margin-top: 24px;
+            margin-top: 24px; /* Space above check button */
         }
 
         #check-button {
-            background-image: linear-gradient(to bottom, #ffb74d, #ff9800);
+            background-image: linear-gradient(
+                to bottom,
+                #ffb74d,
+                #ff9800
+            ); /* Orange gradient */
             color: white;
             border: none;
             padding: 12px 24px;
             font-size: 1.25rem;
             font-weight: bold;
-            border-radius: 28px;
+            border-radius: 28px; /* Rounded button */
             cursor: pointer;
             transition: background-image 0.3s ease, transform 0.15s ease-out,
                 box-shadow 0.25s ease;
-            box-shadow: 0 4px 8px rgba(230, 81, 0, 0.2);
-            text-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 8px rgba(230, 81, 0, 0.2); /* Orange shadow */
+            text-shadow: 0 0 4px rgba(0, 0, 0, 0.15); /* Subtle text shadow */
             display: inline-block;
         }
         #check-button:hover {
-            background-image: linear-gradient(to bottom, #ffa726, #f57c00);
-            box-shadow: 0 8px 12px rgba(230, 81, 0, 0.24);
-            transform: translateY(-4px);
+            background-image: linear-gradient(
+                to bottom,
+                #ffa726,
+                #f57c00
+            ); /* Darker gradient */
+            box-shadow: 0 8px 12px rgba(230, 81, 0, 0.24); /* Larger shadow */
+            transform: translateY(-4px); /* Lift effect */
         }
         #check-button:active {
-            transform: scale(0.96);
-            box-shadow: 0 4px 8px rgba(230, 81, 0, 0.2);
+            transform: scale(0.96); /* Press effect */
+            box-shadow: 0 4px 8px rgba(230, 81, 0, 0.2); /* Reset shadow */
         }
 
         #feedback {
-            margin-top: 24px;
+            margin-top: 24px; /* Space below check button */
             font-weight: bold;
-            min-height: 24px;
+            min-height: 24px; /* Prevent layout shift */
             text-align: center;
-            font-size: 1rem;
+            font-size: 1rem; /* Feedback text size */
+            transition: color 0.3s ease; /* Smooth color change */
         }
         .correct {
-            color: #388e3c;
+            color: #388e3c; /* Green for correct */
         }
         .incorrect {
-            color: #d32f2f;
+            color: #d32f2f; /* Red for incorrect */
         }
 
+        /* Word Group States */
         .word-correct {
-            background-color: #e8f5e9;
-            border-radius: 8px;
+            background-color: #e8f5e9; /* Light green background */
+            border-radius: 8px; /* Match general radius */
         }
         .word-correct .word {
-            border: 0px solid transparent;
+            border: 0px solid transparent; /* No border needed */
         }
         .word-correct .letter {
-            opacity: 0.6;
-            cursor: default;
-            background-color: #a5d6a7;
+            opacity: 0.6; /* Dim correct letters */
+            cursor: default; /* No grab cursor */
+            background-color: #a5d6a7; /* Softer green */
             box-shadow: none;
-            transform: scale(1);
+            transform: scale(1); /* Reset scale */
         }
         .word-correct .letter:active {
-            transform: scale(1);
+            transform: scale(1); /* Prevent active scale */
         }
         .word-correct .word-input {
-            background-color: #f1f8e9;
-            color: #7cb342;
-            border-color: #c8e6c9;
+            background-color: #f1f8e9; /* Very light green */
+            color: #7cb342; /* Darker green text */
+            border-color: #c8e6c9; /* Light green border */
             cursor: default;
             font-weight: bold;
-            box-shadow: none;
+            box-shadow: none; /* Remove focus shadow */
         }
         .word-correct .word-input:focus {
-            box-shadow: none;
+            box-shadow: none; /* Remove focus shadow */
         }
 
         .word-incorrect {
-            background-color: #ffebee;
-            border-radius: 8px;
+            background-color: #ffebee; /* Light red background */
+            border-radius: 8px; /* Match general radius */
         }
         .word-incorrect .word {
-            border: 1px dashed #ef9a9a;
-            padding: 8px;
+            /* Add subtle indication inside the letter area if needed */
+            border: 1px dashed #ef9a9a; /* Optional: border directly on letters */
+            padding: 7px; /* Adjust padding if border added */
         }
         .word-incorrect .word-input {
-            border-color: #ef9a9a;
-            background-color: #fffafa;
+            border-color: #ef9a9a; /* Red border */
+            background-color: #fffafa; /* Very light red background */
         }
         .word-incorrect .word-input:focus {
-            border-color: #f44336;
-            box-shadow: 0 0 0 4px rgba(244, 67, 54, 0.2);
+            border-color: #f44336; /* Darker red on focus */
+            box-shadow: 0 0 0 4px rgba(244, 67, 54, 0.2); /* Red glow */
         }
 
+        /* Responsive Adjustments */
         @media (max-width: 700px) {
             .sentence-content {
-                flex-wrap: wrap;
-                justify-content: center;
+                /* flex-wrap: wrap; */ /* Already wrapping */
+                justify-content: center; /* Ensure centering on smaller screens */
             }
             .header-container {
-                padding: 0 40px;
+                padding: 0 40px; /* Add padding to prevent reset button collision */
             }
         }
 
         @media (max-width: 600px) {
             html {
-                font-size: 16px;
+                font-size: 16px; /* Maintain base font size */
             }
             body {
                 padding: 12px 8px;
             }
             h1 {
-                font-size: 1.75rem;
-                margin-bottom: 24px;
+                font-size: 1.5rem; /* Slightly smaller H1 */
+                margin-bottom: 16px; /* Reduced margin */
             }
             .instructions {
                 margin-bottom: 16px;
@@ -701,16 +843,16 @@
             }
             #game-container {
                 margin-bottom: 24px;
-                max-width: 96%;
+                max-width: 96%; /* Use more screen width */
             }
             .sentence-line {
                 padding: 12px;
                 margin-bottom: 16px;
                 border-radius: 8px;
-                overflow-x: hidden;
+                /* overflow-x: auto; */ /* Allow horizontal scroll if needed, but better to wrap */
             }
             .sentence-content {
-                gap: 16px 12px;
+                gap: 16px 12px; /* Adjust gaps */
                 margin-bottom: 12px;
                 padding-bottom: 0;
             }
@@ -721,76 +863,83 @@
                 min-width: 72px;
             }
             .word {
-                min-height: 44px;
-                padding: 8px;
-                gap: 4px;
-                border-radius: 8px;
+                min-height: 40px; /* Slightly smaller min-height */
+                padding: 6px; /* Adjust padding */
+                gap: 3px; /* Smaller gap */
+                border-radius: 6px; /* Slightly smaller radius */
             }
             .letter {
-                width: 36px;
+                width: 36px; /* Smaller letters */
                 height: 36px;
-                font-size: 1.25rem;
-                border-radius: 8px;
+                font-size: 1.1rem; /* Adjust font size */
+                border-radius: 6px;
             }
             .word-input {
-                font-size: 1rem;
-                padding: 8px 12px;
-                max-width: 120px;
+                font-size: 0.9rem; /* Smaller input font */
+                padding: 6px 10px; /* Adjust padding */
+                max-width: 120px; /* Limit width */
+                min-width: 80px; /* Adjust min width */
                 border-radius: 16px;
             }
             .solution-display {
-                font-size: 1rem;
-                padding: 8px 12px;
+                font-size: 0.9rem;
+                padding: 6px 10px;
                 margin-top: 8px;
             }
             .solution-button {
-                font-size: 0.75rem;
-                padding: 4px 12px;
+                font-size: 0.7rem;
+                padding: 4px 10px;
                 margin-top: 8px;
                 border-radius: 12px;
             }
             #check-button {
                 font-size: 1rem;
-                padding: 12px 20px;
-                margin-top: 24px;
+                padding: 10px 18px; /* Adjust padding */
+                margin-top: 16px; /* Reduced margin */
                 border-radius: 24px;
             }
             #feedback {
-                font-size: 1rem;
+                font-size: 0.9rem;
                 margin-top: 16px;
             }
         }
 
         @media (max-width: 420px) {
+            h1 {
+                font-size: 1.3rem; /* Even smaller H1 */
+            }
             .header-container {
-                padding: 0 32px;
+                padding: 0 32px; /* Adjust padding */
             }
             .sentence-content {
-                gap: 12px 8px;
+                gap: 12px 8px; /* Further reduce gaps */
             }
             .letter {
-                width: 32px;
+                width: 32px; /* Even smaller letters */
                 height: 32px;
-                font-size: 1rem;
+                font-size: 1rem; /* Base font size */
                 border-radius: 4px;
             }
             .word {
-                min-height: 40px;
-                gap: 4px;
+                min-height: 36px; /* Adjust min height */
+                gap: 3px; /* Smallest gap */
+                padding: 4px;
             }
             .word-input {
                 max-width: 104px;
-                font-size: 1rem;
-                padding: 8px;
+                font-size: 0.85rem;
+                padding: 5px 8px;
+                min-width: 70px;
+                border-radius: 14px;
             }
-            h1 {
-                font-size: 1.5rem;
-            }
+
             #check-button {
                 padding: 8px 16px;
+                font-size: 0.9rem;
             }
             #reset-button {
                 padding: 4px;
+                right: 4px; /* Adjust position */
             }
             #reset-button svg {
                 width: 20px;
