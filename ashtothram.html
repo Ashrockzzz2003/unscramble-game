@@ -8,26 +8,31 @@
     </head>
     <body>
         <div class="header-container">
-            <h1>Unscramble Game - Quotes</h1>
-            <button id="reset-button" aria-label="Reset Game">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    width="24px"
-                    height="24px"
-                >
-                    <path
-                        d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
-                    />
-                </svg>
-            </button>
+            <h1>Unscramble Game - Ashtothram</h1>
         </div>
 
         <p class="instructions">
-            Drag the letters to unscramble each word in the sentences below, or
+            Select a range, then drag the letters to unscramble each word, or
             type your answer in the box. Click "Check Answers" when you're done!
         </p>
+
+        <div id="filter-container">
+            <button id="reset-button" aria-label="Reset Game">
+                <svg
+                    width="24"
+                    height="24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                >
+                    <path
+                        d="M21.67 3.955l-2.825-2.202.665-.753 4.478 3.497-4.474 3.503-.665-.753 2.942-2.292h-4.162c-3.547.043-5.202 3.405-6.913 7.023 1.711 3.617 3.366 6.979 6.913 7.022h4.099l-2.883-2.247.665-.753 4.478 3.497-4.474 3.503-.665-.753 2.884-2.247h-4.11c-3.896-.048-5.784-3.369-7.461-6.858-1.687 3.51-3.592 6.842-7.539 6.858h-2.623v-1h2.621c3.6-.014 5.268-3.387 6.988-7.022-1.72-3.636-3.388-7.009-6.988-7.023h-2.621v-1h2.623c3.947.016 5.852 3.348 7.539 6.858 1.677-3.489 3.565-6.81 7.461-6.858h4.047z"
+                    />
+                </svg>
+            </button>
+            <label for="range-select">Select Range:</label>
+            <select id="range-select"></select>
+        </div>
 
         <div id="game-container"></div>
 
@@ -39,18 +44,129 @@
     </body>
 
     <script>
-        const originalSentences = [
-            "LOVE ALL SERVE ALL",
-            "LIFE IS A GAME PLAY IT",
-            "THE END OF EDUCATION IS CHARACTER",
-            "BE GOOD DO GOOD SEE GOOD",
+        const ashtothram = [
+            "OM SRI SAI SATHYA SAI BABAYA NAMAH",
+            "OM SRI SAI SATHYASWAROOPAAYA NAMAH",
+            "OM SRI SAI SATHYADHARMAPARAYANAAYA NAMAH",
+            "OM SRI SAI VARADAAYA NAMAH",
+            "OM SRI SAI SATHPURUSHAAYA NAMAH", // 5
+            "OM SRI SAI SATHYA GUNNATHMANE NAMAH",
+            "OM SRI SAI SADHUVARDHANAAYA NAMAH",
+            "OM SRI SAI SADHUJANA POSHANAAYA NAMAH",
+            "OM SRI SAI SARVAJNAAYA NAMAH",
+            "OM SRI SAI SARVA JANA PRIYAAYA NAMAH", // 10
+            "OM SRI SAI SARVA SAKTHI MOOTHAYE NAMAH",
+            "OM SRI SAI SARVESAAYA NAMAH",
+            "OM SRI SAI SARVA SANGA PARITHYAAGINE NAMAH",
+            "OM SRI SAI SARVA ANTHARYAAMINAE NAMAH",
+            "OM SRI SAI MAHIMAATMANE NAMAH", // 15
+            "OM SRI SAI MAHESWARA SWAROOPAAYA NAMAH",
+            "OM SRI SAI PARTHI GRAMODBHAVAAYA NAMAH",
+            "OM SRI SAI PARTHI KSHETRA NIVAASINE NAMAH",
+            "OM SRI SAI YASAHKAAYA SHIRDI VAASINE NAMAH",
+            "OM SRI SAI JODI AADIPALLI SOMAPPAAYA NAMAH", // 20
+            "OM SRI SAI BHARADWAJA RISHI GOTHRAAYA NAMAH",
+            "OM SRI SAI BHAKTA VATHSALAAYA NAMAH",
+            "OM SRI SAI APAANTHARAATHMANE NAMAH",
+            "OM SRI SAI AVATHAARA MOORTHAYE NAMAH",
+            "OM SRI SAI SARVA BHAYA NIVAARINE NAMAH", // 25
+            "OM SRI SAI AAPASTHAMBA SUTHRAAYA NAMAH",
+            "OM SRI SAI ABHAYAPRADAAYA NAMAH",
+            "OM SRI SAI RATNAAKARA VAMSODBHAVAAYA NAMAH",
+            "OM SRI SAI  SHIRDI SAAYI ABHEDA SAKTHYAAVATHAARAAYA NAMAH",
+            "OM SRI SAI SAMKARAAYA NAMAH", // 30
+            "OM SRI SAI SHIRDI SAI MOORTHAYE NAMAH",
+            "OM SRI SAI DWAARAKAMAAYI VAASINE NAMAH",
+            "OM SRI SAI CHITRAAVATHEE THATA PUTTAPARTHI VIHAARINE NAMAH",
+            "OM SRI SAI SAKTHI PRADAAYA NAMAH",
+            "OM SRI SAI SARANAAGATHA THRAANAAYA NAMAH", // 35
+            "OM SRI SAI ANANDAAYA NAMAH",
+            "OM SRI SAI AANANDA DAAYA NAMAH",
+            "OM SRI SAI AARTHA THRAANA PARAAYANAAYA NAMAH",
+            "OM SRI SAI ANAATHA NAATHAAYA NAMAH",
+            "OM SRI SAI ASAHAAYA SAHAAYAAYA NAMAH", // 40
+            "OM SRI SAI LOKA BAANDHAVAAYA NAMAH",
+            "OM SRI SAI LOKARAKSHAA PARAAYANAAYA NAMAH",
+            "OM SRI SAI LOKANAATHAYA NAMAH",
+            "OM SRI SAI DEENAJANA POSHANAAYA NAMAH",
+            "OM SRI SAI MOORTHI THRAYA SWAROOPAYA NAMAH", // 45
+            "OM SRI SAI MUKTHI PRADAAYA NAMAH",
+            "OM SRI SAI KALUSHA VIDOORAAYA NAMAH",
+            "OM SRI SAI KARUNAAKARAAYA NAMAH",
+            "OM SRI SAI SARVAADHAARAAYA NAMAH",
+            "OM SRI SAI HRUDAYAVASINE NAMAH", // 50
+            "OM SRI SAI PUNYA PHALA PRADAAYA NAMAH",
+            "OM SRI SAI SARVA PAAPAKSHAYA KARAAYA NAMAH",
+            "OM SRI SAI SARVA ROGA NIVAARINE NAMAH",
+            "OM SRI SAI SARVA BAADHA HARAAYA NAMAH",
+            "OM SRI SAI ANANTHA NUTHA KARTHRUNE NAMAH", // 55
+            "OM SRI SAI AADI PURUSHAAYA NAMAH",
+            "OM SRI SAI AADI SAKTHAYE NAMAH",
+            "OM SRI SAI APAROOPA SAKTHINE NAMAH",
+            "OM SRI SAI AVYAKTHA ROOPINE NAMAH",
+            "OM SRI SAI KAAMAKRODHA DHWAMSINE NAMAH", // 60
+            "OM SRI SAI KANAKAAMBARA DHAARINE NAMAH",
+            "OM SRI SAI ADBHUTHA CHARYAAYA NAMAH",
+            "OM SRI SAI AAPADBAANDHAVAAYA NAMAH",
+            "OM SRI SAI PREMAATMANE NAMAH",
+            "OM SRI SAI PREMA MOORTHAYE NAMAH", // 65
+            "OM SRI SAI PREMA PRADAAYA NAMAH",
+            "OM SRI SAI PRIYAAYA NAMAH",
+            "OM SRI SAI BHAKTA PRIYAAYA NAMAH",
+            "OM SRI SAI BHAKTHA MANDAARAAYA NAMAH",
+            "OM SRI SAI BHAKTHA JANA HRIDAYA VIHAARAAYA NAMAH", // 70
+            "OM SRI SAI BHAKTHAJANA HRUDAYAALAYAAYA NAMAH",
+            "OM SRI SAI BHAKTHA PARAADHEENAAYA NAMAH",
+            "OM SRI SAI BHAKTHI JNANA PRADEEPAAYA NAMAH",
+            "OM SRI SAI BHAKTHI JNANA PRADAAYA NAMAH",
+            "OM SRI SAI SUJNAANA MAARGADARSAKAAYA NAMAH", // 75
+            "OM SRI SAI JNAANASWARUPAAYA NAMAH",
+            "OM SRI SAI GITA BODHAKAAYA NAMAH",
+            "OM SRI SAI JNANA SIDDHIDAAYA NAMAH",
+            "OM SRI SAI SUNDARARUPAAYA NAMAH",
+            "OM SRI SAI PUNYA PURUSHAAYA NAMAH", // 80
+            "OM SRI SAI PHALAPRADAAYA NAMAH",
+            "OM SRI SAI PURUSHOTHAMAAYA NAMAH",
+            "OM SRI SAI PURAANA PURUSHAAYA NAMAH",
+            "OM SRI SAI ATHEETHAAYA NAMAH",
+            "OM SRI SAI KAALAATHEETHAAYA NAMAH", // 85
+            "OM SRI SAI SIDDHIROOPAAYA NAMAH",
+            "OM SRI SAI SIDDHA SANKALPAAYA NAMAH",
+            "OM SRI SAI AAROGYA PRADAAYA NAMAH",
+            "OM SRI SAI ANNAVASTRADAAYA NAMAH",
+            "OM SRI SAI SAMSAARA DUKHASHAYAKARAAYA NAMAH", // 90
+            "OM SRI SAI SARVAABHEESTA PRADAAYA NAMAH",
+            "OM SRI SAI KALYAANAGUNAAYA NAMAH",
+            "OM SRI SAI KARMADHWAMSINE NAMAH",
+            "OM SRI SAI SAADHU MAANASA SOBHITHAAYA NAMAH",
+            "OM SRI SAI SARVAMATHA SAMMATHAAYA NAMAH", // 95
+            "OM SRI SAI SAADHUMAANASA PARISODHAKAAYA NAMAH",
+            "OM SRI SAI SADHAKAANUGRAHA VATA VRIKSHA PRATHISTHAAPAKAAYA NAMAH",
+            "OM SRI SAI SAKALA SAMSAYA HARAAYA NAMAH",
+            "OM SRI SAI SAKALATHATHWA BODHAKAAYA NAMAH",
+            "OM SRI SAI YOGISWARAAYA NAMAH", // 100
+            "OM SRI SAI YOGINDRA VANDITHAAYA NAMAH",
+            "OM SRI SAI SARVA MANGALAKARAYA NAMAH",
+            "OM SRI SAI SARVA SIDDHI PRADAAYA NAMAH",
+            "OM SRI SAI AAPANNIVARINE NAMAH",
+            "OM SRI SAI AARTHIHARAAYA NAMAH", // 105
+            "OM SRI SAI SAANTHA MOORTHAYE NAMAH",
+            "OM SRI SAI SULABHA PRASANNAAYA NAMAH",
+            "OM SRI SAI BHAGAVAN SRI SATHYA SAI BAABAAYA NAMAH", // 108
         ];
+
+        // Remove the random selection logic
+        // const randomConsecutiveFive = (arr) => { ... };
+        // const originalSentences = randomConsecutiveFive(...);
 
         const gameContainer = document.getElementById("game-container");
         const checkButton = document.getElementById("check-button");
         const resetButton = document.getElementById("reset-button");
         const feedbackDiv = document.getElementById("feedback");
+        const rangeSelect = document.getElementById("range-select"); // Get select element
         const sortableInstances = new Map();
+
+        let currentSentencesForGame = []; // Store the sentences currently being displayed
 
         function jumbleWord(word) {
             if (word.length <= 1) return word;
@@ -194,11 +310,20 @@
 
         function revealSolution(event) {
             const button = event.target;
-            const sentenceIndex = parseInt(button.dataset.sentenceIndex, 10);
+            const sentenceDisplayIndex = parseInt(
+                button.dataset.sentenceIndex,
+                10
+            ); // Get index within current display
             const sentenceLine = button.closest(".sentence-line");
-            if (!sentenceLine || isNaN(sentenceIndex)) return;
+            if (
+                !sentenceLine ||
+                isNaN(sentenceDisplayIndex) ||
+                !currentSentencesForGame
+            )
+                return;
 
-            const correctSentence = originalSentences[sentenceIndex];
+            const correctSentence =
+                currentSentencesForGame[sentenceDisplayIndex]; // Use the currently displayed sentences array
             const solutionDisplay =
                 sentenceLine.querySelector(".solution-display");
             const wordGroups = sentenceLine.querySelectorAll(".word-group");
@@ -206,10 +331,15 @@
             solutionDisplay.textContent = `Solution: ${correctSentence}`;
             solutionDisplay.classList.add("visible");
 
-            wordGroups.forEach((group) => {
+            // Need to split the *correct* sentence to get original words for locking
+            const correctWords = correctSentence.split(" ");
+            wordGroups.forEach((group, wordIndex) => {
                 const letterContainer = group.querySelector(".word");
                 const inputElement = group.querySelector(".word-input");
-                const originalWord = letterContainer.dataset.originalWord;
+                // Use the word from the correctly split sentence
+                const originalWord = correctWords[wordIndex];
+                // Update data-original-word in case check runs again? Not strictly needed if locking
+                letterContainer.dataset.originalWord = originalWord;
 
                 setLettersToWord(letterContainer, originalWord);
                 inputElement.value = originalWord;
@@ -218,27 +348,29 @@
             button.disabled = true;
         }
 
-        function createGameUI() {
+        // Modified createGameUI to accept sentences
+        function createGameUI(sentencesToDisplay) {
             gameContainer.innerHTML = "";
             feedbackDiv.textContent = "";
             feedbackDiv.className = "";
             sortableInstances.clear();
 
-            originalSentences.forEach((sentence, sentenceIndex) => {
+            sentencesToDisplay.forEach((sentence, sentenceIndex) => {
+                // Use the passed array
                 const sentenceLineDiv = document.createElement("div");
                 sentenceLineDiv.className = "sentence-line";
-                sentenceLineDiv.dataset.sentenceIndex = sentenceIndex;
+                sentenceLineDiv.dataset.sentenceIndex = sentenceIndex; // Store the index *within the current display*
                 const contentDiv = document.createElement("div");
                 contentDiv.className = "sentence-content";
 
                 const words = sentence.split(" ");
                 words.forEach((originalWord, wordIndex) => {
-                    const wordContainerId = `word-${sentenceIndex}-${wordIndex}`;
+                    const wordContainerId = `word-${sentenceIndex}-${wordIndex}`; // Index relative to current display
                     const wordGroupDiv = document.createElement("div");
                     wordGroupDiv.className = "word-group";
                     const wordLettersDiv = document.createElement("div");
                     wordLettersDiv.className = "word";
-                    wordLettersDiv.dataset.originalWord = originalWord;
+                    wordLettersDiv.dataset.originalWord = originalWord; // Store the correct word here
                     wordLettersDiv.id = wordContainerId;
 
                     const jumbled = jumbleWord(originalWord);
@@ -283,7 +415,7 @@
                 const solutionButton = document.createElement("button");
                 solutionButton.className = "solution-button";
                 solutionButton.textContent = "Show Solution";
-                solutionButton.dataset.sentenceIndex = sentenceIndex;
+                solutionButton.dataset.sentenceIndex = sentenceIndex; // Index relative to current display
                 solutionButton.addEventListener("click", revealSolution);
 
                 sentenceLineDiv.appendChild(contentDiv);
@@ -300,7 +432,7 @@
 
             const letterContainer = wordGroup.querySelector(".word");
             const inputElement = wordGroup.querySelector(".word-input");
-            const originalWord = letterContainer.dataset.originalWord;
+            const originalWord = letterContainer.dataset.originalWord; // Get correct word from data attribute
             let userWord = "";
 
             if (inputElement.value.trim()) {
@@ -336,7 +468,7 @@
                 feedbackDiv.className = "correct";
             } else {
                 feedbackDiv.textContent =
-                    "Good job! Keep trying on the words with red borders.";
+                    "Good job! Keep trying on the words with red borders";
                 feedbackDiv.className = "incorrect";
             }
         }
@@ -345,10 +477,60 @@
             location.reload();
         }
 
+        // --- New Functions for Range Selection ---
+        function generateRangeOptions(totalItems, step) {
+            const ranges = [];
+            for (let i = 0; i < totalItems; i += step) {
+                const start = i + 1;
+                const end = Math.min(i + step, totalItems);
+                ranges.push(`${start}-${end}`);
+            }
+            return ranges;
+        }
+
+        function populateRangeSelect() {
+            const ranges = generateRangeOptions(ashtothram.length, 5); // Generate ranges of 5
+            rangeSelect.innerHTML = ""; // Clear existing options
+            ranges.forEach((range) => {
+                const option = document.createElement("option");
+                option.value = range;
+                option.textContent = range;
+                rangeSelect.appendChild(option);
+            });
+        }
+
+        function filterSentencesByRange(rangeValue) {
+            if (!rangeValue) return [];
+            const [startStr, endStr] = rangeValue.split("-");
+            const start = parseInt(startStr, 10);
+            const end = parseInt(endStr, 10);
+
+            if (isNaN(start) || isNaN(end)) return [];
+
+            // Adjust for 0-based array index
+            const startIndex = start - 1;
+            // Slice's end index is exclusive, so end index is just 'end'
+            return ashtothram.slice(startIndex, end);
+        }
+
+        function handleRangeChange() {
+            const selectedRange = rangeSelect.value;
+            currentSentencesForGame = filterSentencesByRange(selectedRange); // Update global variable
+            createGameUI(currentSentencesForGame); // Pass filtered sentences
+        }
+
+        // --- Event Listeners ---
         checkButton.addEventListener("click", checkAnswers);
         resetButton.addEventListener("click", resetGame);
+        rangeSelect.addEventListener("change", handleRangeChange); // Add listener for select change
 
-        createGameUI();
+        // --- Initialization ---
+        populateRangeSelect(); // Populate dropdown first
+        const randomIndex = Math.floor(
+            Math.random() * rangeSelect.options.length
+        );
+        rangeSelect.selectedIndex = randomIndex;
+        handleRangeChange(); // Initial game load based on the default selection
     </script>
 
     <style>
@@ -358,8 +540,6 @@
             padding: 0;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            font-family: "Trebuchet MS", sans-serif;
-            font-size: 16px;
         }
 
         html {
@@ -368,6 +548,7 @@
         }
 
         body {
+            font-family: "Verdana", "Geneva", sans-serif;
             background-color: #fffdfa;
             color: #5d4037;
             padding: 16px 8px;
@@ -384,8 +565,7 @@
             align-items: center;
             width: 100%;
             max-width: 800px;
-            margin-bottom: 8px; /* Reduced margin */
-            position: relative;
+            margin-bottom: 8px;
         }
 
         h1 {
@@ -398,27 +578,33 @@
 
         .instructions {
             font-size: 0.9rem;
-            color: #795548; /* Slightly lighter brown */
+            color: #795548;
             text-align: center;
             max-width: 600px;
+            margin-bottom: 16px; /* Adjusted spacing */
+        }
+
+        #filter-container {
             margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Center the filter items */
+            gap: 12px; /* Space between items */
+            flex-wrap: wrap; /* Allow wrapping if needed */
         }
 
         #reset-button {
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
             background-color: transparent;
-            border: none;
-            padding: 8px;
+            border: 1px solid #ffcc80; /* Add border for context */
+            padding: 6px; /* Adjust padding */
             cursor: pointer;
             color: #ffa726;
-            border-radius: 20px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: background-color 0.25s ease, color 0.25s ease;
+            order: -1; /* Ensure it appears first visually if wrapping occurs unexpectedly */
         }
         #reset-button:hover {
             background-color: #fff8e1;
@@ -429,9 +615,35 @@
             height: 24px;
         }
 
+        #filter-container label {
+            font-size: 0.9rem;
+            color: #795548;
+            margin-left: 8px; /* Space after reset button */
+        }
+        #range-select {
+            padding: 8px 12px;
+            border: 1px solid #ffcc80;
+            border-radius: 8px;
+            background-color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            min-width: 100px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e65100'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px top 50%;
+            background-size: 16px;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        #range-select:focus {
+            outline: none;
+            border-color: #ff9800;
+            box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.2);
+        }
+
         #game-container {
             width: 100%;
-            max-width: 800px;
+            max-width: 1024px;
             margin-bottom: 32px;
         }
 
@@ -444,6 +656,7 @@
             box-shadow: 0 4px 12px rgba(230, 81, 0, 0.08);
             position: relative;
             transition: box-shadow 0.3s ease;
+            overflow-x: auto;
         }
 
         .sentence-content {
@@ -679,8 +892,8 @@
                 flex-wrap: wrap;
                 justify-content: center;
             }
-            .header-container {
-                padding: 0 40px;
+            .sentence-line {
+                overflow-x: hidden;
             }
         }
 
@@ -699,6 +912,10 @@
                 margin-bottom: 16px;
                 font-size: 0.85rem;
             }
+            #filter-container {
+                margin-bottom: 16px;
+                gap: 8px;
+            } /* Reduce gap */
             #game-container {
                 margin-bottom: 24px;
                 max-width: 96%;
@@ -707,7 +924,6 @@
                 padding: 12px;
                 margin-bottom: 16px;
                 border-radius: 8px;
-                overflow-x: hidden;
             }
             .sentence-content {
                 gap: 16px 12px;
@@ -759,12 +975,16 @@
                 font-size: 1rem;
                 margin-top: 16px;
             }
+            #reset-button {
+                right: 8px;
+            } /* Adjust position slightly */
         }
 
         @media (max-width: 420px) {
-            .header-container {
-                padding: 0 32px;
-            }
+            #filter-container {
+                flex-direction: column;
+                gap: 8px;
+            } /* Stack filter controls */
             .sentence-content {
                 gap: 12px 8px;
             }
@@ -790,12 +1010,13 @@
                 padding: 8px 16px;
             }
             #reset-button {
-                padding: 4px;
-            }
-            #reset-button svg {
-                width: 20px;
-                height: 20px;
-            }
+                position: static;
+                transform: none;
+                margin-bottom: 8px;
+            } /* Make it static */
+            .header-container {
+                justify-content: center;
+            } /* Re-center title */
             .instructions {
                 font-size: 0.8rem;
                 margin-bottom: 12px;
