@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Unscramble Game</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    </head>
+    <body>
+        <div class="header-container">
+            <h1>Unscramble Game - Bakhthas</h1>
+            <button id="reset-button" aria-label="Reset Game">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    width="24px"
+                    height="24px"
+                >
+                    <path
+                        d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
+                    />
+                </svg>
+            </button>
+        </div>
+
+        <p class="instructions">
+            Find the names of the 5 bhaktas by unscrambling the jumbled letters
+            given below. Clues are given.
+        </p>
+
+        <p class="instructions">
+            <strong>Clue</strong> - Devotees of Lord Vishnu, Vittal, Krishna,
+            Rama, Vishnu
+        </p>
+
+        <div id="game-container"></div>
+
+        <div class="controls-container">
+            <button id="check-button">Check Answers</button>
+        </div>
+
+        <div id="feedback"></div>
+    </body>
+
+    <script>
+        const originalSentences = [
+            "PRAHLAD",
+            "TUKARAM",
+            "MIRABAI",
+            "TULSIDAS",
+            "DHRUVA",
+        ];
+
+        const gameContainer = document.getElementById("game-container");
+        const checkButton = document.getElementById("check-button");
+        const resetButton = document.getElementById("reset-button");
+        const feedbackDiv = document.getElementById("feedback");
+        const sortableInstances = new Map();
+
+        function jumbleWord(word) {
+            if (word.length <= 1) return word;
+            let letters = word.split("");
+            for (let i = letters.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [letters[i], letters[j]] = [letters[j], letters[i]];
+            }
+            const jumbledWord = letters.join("");
+            // Increased check to avoid jumbling short words back to original
+            return jumbledWord === word && word.length > 2
+                ? jumbleWord(word)
+                : jumbledWord;
+        }
+
+        function setLettersToWord(letterContainer, targetWord) {
+            const currentLetters = Array.from(
+                letterContainer.querySelectorAll(".letter")
+            );
+            const letterMap = currentLetters.reduce((map, span) => {
+                const char = span.textContent;
+                if (!map[char]) map[char] = [];
+                map[char].push(span);
+                return map;
+            }, {});
+
+            const orderedSpans = [];
+            for (const char of targetWord.toUpperCase()) {
+                if (letterMap[char] && letterMap[char].length > 0) {
+                    orderedSpans.push(letterMap[char].shift());
+                }
+            }
+            letterContainer.innerHTML = "";
+            orderedSpans.forEach((span) => letterContainer.appendChild(span));
+        }
+
+        function getCurrentWordFromLetters(letterContainer) {
+            const letterSpans = letterContainer.querySelectorAll(".letter");
+            return Array.from(letterSpans)
+                .map((span) => span.textContent)
+                .join("");
+        }
+
+        function findAssociatedInput(letterContainer) {
+            const wordGroup = letterContainer.closest(".word-group");
+            return wordGroup ? wordGroup.querySelector(".word-input") : null;
+        }
+
+        function handleSortEnd(event) {
+            const letterContainer = event.to;
+            const wordGroup = letterContainer.closest(".word-group");
+            if (wordGroup && wordGroup.classList.contains("word-correct"))
+                return;
+
+            const inputElement = findAssociatedInput(letterContainer);
+            if (inputElement && !inputElement.disabled) {
+                inputElement.value = getCurrentWordFromLetters(letterContainer);
+            }
+            if (wordGroup) {
+                wordGroup.classList.remove("word-incorrect");
+            }
+        }
+
+        function handleInputChange(event) {
+            const inputElement = event.target;
+            if (inputElement.disabled) return;
+
+            const wordGroup = inputElement.closest(".word-group");
+            if (!wordGroup) return;
+            wordGroup.classList.remove("word-incorrect");
+
+            const letterContainer = wordGroup.querySelector(".word");
+            if (!letterContainer) return;
+
+            const typedValue = inputElement.value.toUpperCase().trim();
+
+            // Get all letter spans currently available in this word container
+            const allLetterSpansInWord = Array.from(
+                letterContainer.querySelectorAll(".letter")
+            );
+
+            // Map available letters to their spans
+            const availableLetterMap = allLetterSpansInWord.reduce(
+                (map, span) => {
+                    const char = span.textContent;
+                    if (!map[char]) {
+                        map[char] = [];
+                    }
+                    map[char].push(span);
+                    return map;
+                },
+                {}
+            );
+
+            const orderedSpans = [];
+            const usedSpans = new Set();
+
+            // Try to build the typed word using available letter spans
+            for (const char of typedValue) {
+                if (
+                    availableLetterMap[char] &&
+                    availableLetterMap[char].length > 0
+                ) {
+                    const spanToUse = availableLetterMap[char].shift(); // Use one instance of the letter
+                    orderedSpans.push(spanToUse);
+                    usedSpans.add(spanToUse);
+                }
+                // If a typed character isn't available, we stop trying to match
+                // (This prevents rearranging based on partial invalid input)
+                // else {
+                //    break; // Optional: Decide if partial rearrangement is desired
+                // }
+            }
+
+            // Keep only the spans that correspond to the valid typed prefix
+            const validOrderedSpans = orderedSpans.slice(0, typedValue.length);
+            const validUsedSpans = new Set(validOrderedSpans);
+
+            // Get the spans that were not used for the valid typed prefix
+            const remainingSpans = allLetterSpansInWord.filter(
+                (span) => !validUsedSpans.has(span)
+            );
+
+            // Reconstruct the word container: ordered letters first, then remaining
+            letterContainer.innerHTML = "";
+            validOrderedSpans.forEach((span) =>
+                letterContainer.appendChild(span)
+            );
+            remainingSpans.forEach((span) => letterContainer.appendChild(span));
+        }
+
+        function lockWordGroup(wordGroup) {
+            const letterContainer = wordGroup.querySelector(".word");
+            const inputElement = wordGroup.querySelector(".word-input");
+            const wordContainerId = letterContainer.id;
+            const sortableInstance = sortableInstances.get(wordContainerId);
+
+            wordGroup.classList.add("word-correct");
+            wordGroup.classList.remove("word-incorrect");
+            inputElement.disabled = true;
+            if (sortableInstance) {
+                sortableInstance.option("disabled", true);
+            }
+        }
+
+        function unlockWordGroup(wordGroup) {
+            const letterContainer = wordGroup.querySelector(".word");
+            const inputElement = wordGroup.querySelector(".word-input");
+            const wordContainerId = letterContainer.id;
+            const sortableInstance = sortableInstances.get(wordContainerId);
+
+            wordGroup.classList.remove("word-correct");
+            inputElement.disabled = false;
+            if (sortableInstance) {
+                sortableInstance.option("disabled", false);
+            }
+        }
+
+        function revealSolution(event) {
+            const button = event.target;
+            // Get the original index stored in the button's dataset
+            const originalSentenceIndex = parseInt(
+                button.dataset.sentenceIndex,
+                10
+            );
+            const sentenceLine = button.closest(".sentence-line");
+            if (!sentenceLine || isNaN(originalSentenceIndex)) return;
+
+            // Fetch the correct sentence from the *original* array using the stored index
+            const correctSentence = originalSentences[originalSentenceIndex];
+            const solutionDisplay =
+                sentenceLine.querySelector(".solution-display");
+            const wordGroups = sentenceLine.querySelectorAll(".word-group");
+
+            solutionDisplay.textContent = `Solution: ${correctSentence}`;
+            solutionDisplay.classList.add("visible");
+
+            wordGroups.forEach((group) => {
+                const letterContainer = group.querySelector(".word");
+                const inputElement = group.querySelector(".word-input");
+                const originalWord = letterContainer.dataset.originalWord;
+
+                setLettersToWord(letterContainer, originalWord);
+                inputElement.value = originalWord;
+                lockWordGroup(group);
+            });
+            button.disabled = true; // Disable button after revealing
+            button.style.opacity = "0"; // Hide button
+            button.style.pointerEvents = "none";
+        }
+
+        function createGameUI() {
+            gameContainer.innerHTML = "";
+            feedbackDiv.textContent = "";
+            feedbackDiv.className = "";
+            sortableInstances.clear();
+
+            const numberOfQuotesToDisplay = 5;
+            const selectedQuotesData = originalSentences.map(
+                (sentence, index) => ({
+                    sentence: sentence,
+                    originalIndex: index,
+                })
+            );
+
+            // Loop through the selected quotes data instead of the original array
+            selectedQuotesData.forEach((item, displayIndex) => {
+                const sentence = item.sentence;
+                const originalSentenceIndex = item.originalIndex; // Get the stored original index
+
+                const sentenceLineDiv = document.createElement("div");
+                sentenceLineDiv.className = "sentence-line";
+                // Store the original index in the sentence line if needed elsewhere, though button handles it
+                // sentenceLineDiv.dataset.originalSentenceIndex = originalSentenceIndex;
+
+                const contentDiv = document.createElement("div");
+                contentDiv.className = "sentence-content";
+
+                const words = sentence.split(" ");
+                words.forEach((originalWord, wordIndex) => {
+                    // Use the displayIndex (0-4) for unique element IDs in this session
+                    const wordContainerId = `word-${displayIndex}-${wordIndex}`;
+                    const wordGroupDiv = document.createElement("div");
+                    wordGroupDiv.className = "word-group";
+                    const wordLettersDiv = document.createElement("div");
+                    wordLettersDiv.className = "word";
+                    wordLettersDiv.dataset.originalWord = originalWord; // Store correct word here
+                    wordLettersDiv.id = wordContainerId;
+
+                    const jumbled = jumbleWord(originalWord);
+                    jumbled.split("").forEach((letter) => {
+                        const letterSpan = document.createElement("span");
+                        letterSpan.className = "letter";
+                        letterSpan.textContent = letter;
+                        wordLettersDiv.appendChild(letterSpan);
+                    });
+
+                    const inputBox = document.createElement("input");
+                    inputBox.type = "text";
+                    inputBox.className = "word-input";
+                    inputBox.placeholder = "Type or drag";
+                    // Adjust aria-label to use the displayed sentence number (1 to 5)
+                    inputBox.setAttribute(
+                        "aria-label",
+                        `Type or drag letters for word ${
+                            wordIndex + 1
+                        } in sentence ${displayIndex + 1}` // Use displayIndex + 1
+                    );
+                    inputBox.addEventListener("input", handleInputChange);
+                    inputBox.disabled = false;
+
+                    wordGroupDiv.appendChild(wordLettersDiv);
+                    wordGroupDiv.appendChild(inputBox);
+                    contentDiv.appendChild(wordGroupDiv);
+
+                    const sortable = new Sortable(wordLettersDiv, {
+                        animation: 150,
+                        direction: "horizontal",
+                        easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+                        group: wordContainerId,
+                        ghostClass: "letter-ghost",
+                        onEnd: handleSortEnd,
+                        disabled: false,
+                    });
+                    sortableInstances.set(wordContainerId, sortable);
+                });
+
+                const solutionDiv = document.createElement("div");
+                solutionDiv.className = "solution-display";
+                const solutionButton = document.createElement("button");
+                solutionButton.className = "solution-button";
+                solutionButton.textContent = "Show Solution";
+                // *** IMPORTANT: Store the ORIGINAL index for the reveal function ***
+                solutionButton.dataset.sentenceIndex = originalSentenceIndex;
+                solutionButton.addEventListener("click", revealSolution);
+
+                sentenceLineDiv.appendChild(contentDiv);
+                sentenceLineDiv.appendChild(solutionDiv);
+                sentenceLineDiv.appendChild(solutionButton);
+                gameContainer.appendChild(sentenceLineDiv);
+            });
+        }
+
+        function checkSingleWord(wordGroup) {
+            if (wordGroup.classList.contains("word-correct")) {
+                return true; // Already marked correct
+            }
+
+            const letterContainer = wordGroup.querySelector(".word");
+            const inputElement = wordGroup.querySelector(".word-input");
+            const originalWord = letterContainer.dataset.originalWord;
+            let userWord = "";
+
+            // Prefer input box value if it's not empty
+            if (inputElement.value.trim()) {
+                userWord = inputElement.value.toUpperCase().trim();
+            } else {
+                // Otherwise, use the order of letters
+                userWord = getCurrentWordFromLetters(letterContainer);
+                // If letters match, update the input box for consistency
+                if (userWord === originalWord) {
+                    inputElement.value = userWord;
+                }
+            }
+
+            // Reset visual state before checking
+            wordGroup.classList.remove("word-incorrect", "word-correct");
+
+            if (userWord === originalWord) {
+                lockWordGroup(wordGroup); // Lock if correct
+                return true;
+            } else {
+                wordGroup.classList.add("word-incorrect");
+                unlockWordGroup(wordGroup); // Ensure it's unlocked if incorrect
+                return false;
+            }
+        }
+
+        function checkAnswers() {
+            const wordGroups = gameContainer.querySelectorAll(".word-group");
+            let allCorrect = true;
+            let incorrectCount = 0; // Count incorrect words
+
+            wordGroups.forEach((group) => {
+                if (!checkSingleWord(group)) {
+                    allCorrect = false;
+                    incorrectCount++;
+                }
+            });
+
+            feedbackDiv.classList.remove("correct", "incorrect"); // Clear previous classes
+
+            if (allCorrect) {
+                feedbackDiv.textContent =
+                    "Excellent! You unscrambled all the words correctly!";
+                feedbackDiv.classList.add("correct");
+            } else {
+                feedbackDiv.textContent = `Good effort! ${incorrectCount} word(s) still need correction. Keep trying!`;
+                feedbackDiv.classList.add("incorrect");
+            }
+        }
+
+        function resetGame() {
+            // Reload the page to get a new set of random quotes
+            location.reload();
+        }
+
+        // Event Listeners
+        checkButton.addEventListener("click", checkAnswers);
+        resetButton.addEventListener("click", resetGame);
+
+        // Initial game setup on page load
+        createGameUI();
+    </script>
+
+    <style>
+        /* CSS remains the same as provided */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-family: "Trebuchet MS", sans-serif;
+            font-size: 16px;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: #fffdfa;
+            color: #5d4037;
+            padding: 16px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 8px; /* Reduced margin */
+            position: relative;
+        }
+
+        h1 {
+            color: #e65100;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.75rem;
+            margin: 0;
+        }
+
+        .instructions {
+            font-size: 0.9rem;
+            color: #795548; /* Slightly lighter brown */
+            text-align: center;
+            max-width: 600px;
+            margin-bottom: 24px;
+        }
+
+        #reset-button {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: transparent;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            color: #ffa726;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+        #reset-button:hover {
+            background-color: #fff8e1;
+            color: #f57c00;
+        }
+        #reset-button svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 32px;
+        }
+
+        .sentence-line {
+            background-color: #ffffff;
+            border: 1px solid #ffe0b2;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(230, 81, 0, 0.08);
+            position: relative;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .sentence-content {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center; /* Center words */
+            gap: 20px 16px; /* Vertical gap, Horizontal gap */
+            padding-bottom: 8px; /* Space above solution button */
+            min-width: fit-content; /* Ensure container fits content */
+        }
+
+        .word-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px; /* Increased gap */
+            transition: background-color 0.3s ease-in-out;
+            padding: 12px; /* Padding around word+input */
+            border-radius: 8px;
+            min-width: 80px; /* Minimum width for small words */
+        }
+
+        .word {
+            display: flex;
+            flex-wrap: nowrap; /* Keep letters in one line */
+            justify-content: center; /* Center letters */
+            gap: 4px; /* Gap between letters */
+            min-height: 44px; /* Ensure consistent height */
+            padding: 8px; /* Padding inside the letter container */
+            border-radius: 8px; /* Rounded corners for the container */
+            border: 0px solid transparent; /* Was dashed on incorrect, now handled by background */
+            transition: border 0.3s ease-in-out; /* Smooth border transition */
+            width: 100%; /* Take up width of parent .word-group */
+            touch-action: manipulation; /* Improve touch interaction */
+            /* background-color: #fff8e1; Optional subtle background */
+        }
+
+        .letter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffa726; /* Primary letter color */
+            color: white;
+            width: 40px; /* Letter width */
+            height: 40px; /* Letter height */
+            border-radius: 8px; /* Rounded letters */
+            cursor: grab;
+            font-weight: bold;
+            text-align: center;
+            user-select: none; /* Prevent text selection */
+            transition: background-color 0.25s ease, opacity 0.25s ease,
+                transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.25s ease;
+            font-size: 1.25rem; /* Letter size */
+            box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            will-change: transform, background-color, box-shadow; /* Optimize animation */
+        }
+        .letter:active {
+            cursor: grabbing;
+            background-color: #fb8c00 !important; /* Darker shade when grabbed */
+            transform: scale(1.1); /* Slightly enlarge when grabbed */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Stronger shadow */
+            z-index: 10; /* Bring to front */
+        }
+
+        .letter-ghost {
+            opacity: 0.4 !important; /* Make ghost more transparent */
+            background-color: #ffcc80 !important; /* Lighter ghost color */
+            box-shadow: none !important;
+            border-radius: 8px; /* Match letter radius */
+            transform: scale(1); /* No scaling for ghost */
+        }
+
+        .word-input {
+            padding: 8px 12px;
+            border: 1px solid #ffcc80; /* Light orange border */
+            border-radius: 20px; /* Pill shape */
+            font-size: 1rem;
+            text-align: center;
+            width: 100%; /* Input takes width of .word-group */
+            max-width: fit-content; /* Shrink to fit content + padding */
+            min-width: 100px; /* Minimum width */
+            text-transform: uppercase; /* Match letter case */
+            outline: none; /* Remove default outline */
+            transition: border-color 0.25s ease, background-color 0.3s ease,
+                color 0.3s ease, box-shadow 0.25s ease;
+        }
+        .word-input:focus {
+            border-color: #ff9800; /* Darker orange border on focus */
+            box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.2); /* Subtle glow */
+        }
+        .word-input::placeholder {
+            color: #bdbdbd; /* Lighter placeholder text */
+            font-style: italic;
+            text-transform: none; /* Placeholder doesn't need uppercase */
+        }
+
+        .solution-display {
+            margin-top: 12px;
+            padding: 8px 12px;
+            background-color: #fff8e1; /* Light yellow background */
+            border-radius: 8px;
+            font-style: italic;
+            color: #e65100; /* Dark orange text */
+            font-weight: bold;
+            text-align: center;
+            display: none; /* Hidden by default */
+            border: 1px dashed #ffe0b2; /* Dashed border */
+            font-size: 1rem;
+            opacity: 0; /* Start fully transparent */
+            transition: opacity 0.3s ease-in-out; /* Fade-in transition */
+        }
+        .solution-display.visible {
+            display: block; /* Make it take space */
+            opacity: 1; /* Make it fully visible */
+        }
+
+        .solution-button {
+            display: block; /* Ensure it's on its own line */
+            margin: 12px auto 0 auto; /* Center horizontally, add top margin */
+            padding: 6px 12px; /* Smaller padding */
+            font-size: 0.75rem; /* Smaller font */
+            background-color: #fff;
+            color: #ffa726; /* Orange text */
+            border: 1px solid #ffe0b2; /* Light orange border */
+            border-radius: 16px; /* Rounded corners */
+            cursor: pointer;
+            transition: background-color 0.25s ease, color 0.25s ease,
+                box-shadow 0.25s ease, opacity 0.3s ease;
+            font-weight: 500;
+            opacity: 1; /* Visible by default */
+        }
+        .solution-button:hover {
+            background-color: #fff8e1; /* Light yellow on hover */
+            color: #f57c00; /* Darker orange text on hover */
+            box-shadow: 0 4px 4px rgba(0, 0, 0, 0.08); /* Subtle shadow */
+        }
+        .solution-button:disabled {
+            /* opacity: 0; */ /* Kept for reference, handled by revealSolution */
+            /* pointer-events: none; */ /* Kept for reference, handled by revealSolution */
+            cursor: default;
+        }
+
+        .controls-container {
+            text-align: center;
+            margin-top: 24px; /* Space above check button */
+        }
+
+        #check-button {
+            background-image: linear-gradient(
+                to bottom,
+                #ffb74d,
+                #ff9800
+            ); /* Orange gradient */
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-radius: 28px; /* Rounded button */
+            cursor: pointer;
+            transition: background-image 0.3s ease, transform 0.15s ease-out,
+                box-shadow 0.25s ease;
+            box-shadow: 0 4px 8px rgba(230, 81, 0, 0.2); /* Orange shadow */
+            text-shadow: 0 0 4px rgba(0, 0, 0, 0.15); /* Subtle text shadow */
+            display: inline-block;
+        }
+        #check-button:hover {
+            background-image: linear-gradient(
+                to bottom,
+                #ffa726,
+                #f57c00
+            ); /* Darker gradient */
+            box-shadow: 0 8px 12px rgba(230, 81, 0, 0.24); /* Larger shadow */
+            transform: translateY(-4px); /* Lift effect */
+        }
+        #check-button:active {
+            transform: scale(0.96); /* Press effect */
+            box-shadow: 0 4px 8px rgba(230, 81, 0, 0.2); /* Reset shadow */
+        }
+
+        #feedback {
+            margin-top: 24px; /* Space below check button */
+            font-weight: bold;
+            min-height: 24px; /* Prevent layout shift */
+            text-align: center;
+            font-size: 1rem; /* Feedback text size */
+            transition: color 0.3s ease; /* Smooth color change */
+        }
+        .correct {
+            color: #388e3c; /* Green for correct */
+        }
+        .incorrect {
+            color: #d32f2f; /* Red for incorrect */
+        }
+
+        /* Word Group States */
+        .word-correct {
+            background-color: #e8f5e9; /* Light green background */
+            border-radius: 8px; /* Match general radius */
+        }
+        .word-correct .word {
+            border: 0px solid transparent; /* No border needed */
+        }
+        .word-correct .letter {
+            opacity: 0.6; /* Dim correct letters */
+            cursor: default; /* No grab cursor */
+            background-color: #a5d6a7; /* Softer green */
+            box-shadow: none;
+            transform: scale(1); /* Reset scale */
+        }
+        .word-correct .letter:active {
+            transform: scale(1); /* Prevent active scale */
+        }
+        .word-correct .word-input {
+            background-color: #f1f8e9; /* Very light green */
+            color: #7cb342; /* Darker green text */
+            border-color: #c8e6c9; /* Light green border */
+            cursor: default;
+            font-weight: bold;
+            box-shadow: none; /* Remove focus shadow */
+        }
+        .word-correct .word-input:focus {
+            box-shadow: none; /* Remove focus shadow */
+        }
+
+        .word-incorrect {
+            background-color: #ffebee; /* Light red background */
+            border-radius: 8px; /* Match general radius */
+        }
+        .word-incorrect .word {
+            /* Add subtle indication inside the letter area if needed */
+            border: 1px dashed #ef9a9a; /* Optional: border directly on letters */
+            padding: 7px; /* Adjust padding if border added */
+        }
+        .word-incorrect .word-input {
+            border-color: #ef9a9a; /* Red border */
+            background-color: #fffafa; /* Very light red background */
+        }
+        .word-incorrect .word-input:focus {
+            border-color: #f44336; /* Darker red on focus */
+            box-shadow: 0 0 0 4px rgba(244, 67, 54, 0.2); /* Red glow */
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 700px) {
+            .sentence-content {
+                /* flex-wrap: wrap; */ /* Already wrapping */
+                justify-content: center; /* Ensure centering on smaller screens */
+            }
+            .header-container {
+                padding: 0 40px; /* Add padding to prevent reset button collision */
+            }
+        }
+
+        @media (max-width: 600px) {
+            html {
+                font-size: 16px; /* Maintain base font size */
+            }
+            body {
+                padding: 12px 8px;
+            }
+            h1 {
+                font-size: 1.5rem; /* Slightly smaller H1 */
+                margin-bottom: 16px; /* Reduced margin */
+            }
+            .instructions {
+                margin-bottom: 16px;
+                font-size: 0.85rem;
+            }
+            #game-container {
+                margin-bottom: 24px;
+                max-width: 96%; /* Use more screen width */
+            }
+            .sentence-line {
+                padding: 12px;
+                margin-bottom: 16px;
+                border-radius: 8px;
+                /* overflow-x: auto; */ /* Allow horizontal scroll if needed, but better to wrap */
+            }
+            .sentence-content {
+                gap: 16px 12px; /* Adjust gaps */
+                margin-bottom: 12px;
+                padding-bottom: 0;
+            }
+            .word-group {
+                padding: 8px;
+                gap: 8px;
+                border-radius: 8px;
+                min-width: 72px;
+            }
+            .word {
+                min-height: 40px; /* Slightly smaller min-height */
+                padding: 6px; /* Adjust padding */
+                gap: 3px; /* Smaller gap */
+                border-radius: 6px; /* Slightly smaller radius */
+            }
+            .letter {
+                width: 36px; /* Smaller letters */
+                height: 36px;
+                font-size: 1.1rem; /* Adjust font size */
+                border-radius: 6px;
+            }
+            .word-input {
+                font-size: 0.9rem; /* Smaller input font */
+                padding: 6px 10px; /* Adjust padding */
+                max-width: 120px; /* Limit width */
+                min-width: 80px; /* Adjust min width */
+                border-radius: 16px;
+            }
+            .solution-display {
+                font-size: 0.9rem;
+                padding: 6px 10px;
+                margin-top: 8px;
+            }
+            .solution-button {
+                font-size: 0.7rem;
+                padding: 4px 10px;
+                margin-top: 8px;
+                border-radius: 12px;
+            }
+            #check-button {
+                font-size: 1rem;
+                padding: 10px 18px; /* Adjust padding */
+                margin-top: 16px; /* Reduced margin */
+                border-radius: 24px;
+            }
+            #feedback {
+                font-size: 0.9rem;
+                margin-top: 16px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            h1 {
+                font-size: 1.3rem; /* Even smaller H1 */
+            }
+            .header-container {
+                padding: 0 32px; /* Adjust padding */
+            }
+            .sentence-content {
+                gap: 12px 8px; /* Further reduce gaps */
+            }
+            .letter {
+                width: 32px; /* Even smaller letters */
+                height: 32px;
+                font-size: 1rem; /* Base font size */
+                border-radius: 4px;
+            }
+            .word {
+                min-height: 36px; /* Adjust min height */
+                gap: 3px; /* Smallest gap */
+                padding: 4px;
+            }
+            .word-input {
+                max-width: 104px;
+                font-size: 0.85rem;
+                padding: 5px 8px;
+                min-width: 70px;
+                border-radius: 14px;
+            }
+
+            #check-button {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            #reset-button {
+                padding: 4px;
+                right: 4px; /* Adjust position */
+            }
+            #reset-button svg {
+                width: 20px;
+                height: 20px;
+            }
+            .instructions {
+                font-size: 0.8rem;
+                margin-bottom: 12px;
+            }
+        }
+    </style>
+</html>
